@@ -7,7 +7,7 @@ Simple usage
 
 ```from pybooks.main import Pbooks \
 
-```pbook = Pbooks( author='jerome',\
+pbook = Pbooks( author='jerome',\
                    title='elements of statistic',\
                    weights=(9, 1)) 
          
