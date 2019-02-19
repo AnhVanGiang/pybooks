@@ -1,0 +1,2 @@
+class InvalidUrlError(TypeError):
+    pass
