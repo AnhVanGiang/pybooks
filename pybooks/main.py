@@ -284,11 +284,11 @@ class Pbooks:
             pprint(self.result)
 
 
-if __name__ == '__main__':
-    pbook = Pbooks(file_name='sources.json', author='jerome',
-                   title='elements of statistic',
-                   weights=(1, 1),
-                   threshold=0.4,
-                   show_result=True,
-                   log=True)
-    pbook.main()
+# if __name__ == '__main__':
+#     pbook = Pbooks(file_name='sources.json', author='jerome',
+#                    title='elements of statistic',
+#                    weights=(1, 1),
+#                    threshold=0.4,
+#                    show_result=True,
+#                    log=True)
+#     pbook.main()
