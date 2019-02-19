@@ -18,7 +18,8 @@ class Pbooks:
                  file_name: str = SOURCES_FILE,
                  weights: Tuple[float, float] = (1, 1),
                  show_result: bool = False,
-                 threshold: float = 0):
+                 threshold: float = 0,
+                 log: bool = True):
         """
         Search through all available sources and find a book with the highest accuracy based on author and title input
         :param author: string Author of the book you want to find
@@ -27,9 +28,17 @@ class Pbooks:
         :param weights: Tuple[float, float] contain the weight values for accuracy calculation
         :param show_result: bool Print the result at the end or not
         :param threshold: float Only show the result above the threshold
+        :param log: bool Print during run or not
         """
-        logging.basicConfig(level=logging.INFO)
-        self.sources = self.convert_to_struct(file_name)
+        if log:
+            logging.basicConfig(level=logging.INFO)
+        else:
+            logging.basicConfig(level=logging.WARNING)
+            logging.warning('YOU TURNED OFF INFO LOGGING. CHOSEN URL WILL NOT BE PRINTED')
+        try:
+            self.sources = self.convert_to_struct(file_name)
+        except FileNotFoundError:
+            raise SourcesNotFoundError('JSON sources file not found')
         self.author = author
         self.title = title
         self.result = []
@@ -61,40 +70,45 @@ class Pbooks:
                 for row in rows:
                     try:
                         if AUTHOR.position is not None:
-                            authors.append(row.find_all(AUTHOR.tag, AUTHOR.attribute)[AUTHOR.position].text)
+                            authors.append(row.find_all(AUTHOR.tag, AUTHOR.attribute)[AUTHOR.position].text
+                                           .replace('\n', '').strip())
                         else:
-                            authors.append(row.find(AUTHOR.tag, AUTHOR.attribute).text)
+                            authors.append(row.find(AUTHOR.tag, AUTHOR.attribute).text.replace('\n', '').strip())
                     except (TypeError, AttributeError):
                         authors.append('NotFound')
 
                     try:
                         if TITLE.position is not None:
-                            titles.append(row.find_all(TITLE.tag, TITLE.attribute)[TITLE.position].text)
+                            titles.append(row.find_all(TITLE.tag, TITLE.attribute)[TITLE.position].text
+                                          .replace('\n', '').strip())
                             urls.append(source.url +
                                         row.find_all(TITLE.tag, TITLE.attribute)[TITLE.position]
-                                        .find('a')['href'])
+                                        .find('a')['href'].replace('\n', '').strip())
                         else:
-                            titles.append(row.find(TITLE.tag, TITLE.attribute).text)
+                            titles.append(row.find(TITLE.tag, TITLE.attribute).text.replace('\n', '').strip())
                             urls.append(source.url +
                                         row.find(TITLE.tag, TITLE.attribute)
-                                        .find('a')['href'])
+                                        .find('a')['href'].replace('\n', '').strip())
                     except (TypeError, AttributeError):
                         titles.append('NotFound')
                         urls.append('NotFound')
 
                     try:
                         if YEAR.position is not None:
-                            years.append(row.find_all(YEAR.tag, YEAR.attribute)[YEAR.position].text)
+                            years.append(row.find_all(YEAR.tag, YEAR.attribute)[YEAR.position].text
+                                         .replace('\n', '').strip())
                         else:
-                            years.append(row.find(YEAR.tag, YEAR.attribute).text)
+                            years.append(row.find(YEAR.tag, YEAR.attribute).text.replace('\n', '').strip())
                     except (TypeError, AttributeError):
                         years.append('NotFound')
 
                     try:
                         if EXTENSION.position is not None:
-                            extensions.append(row.find_all(EXTENSION.tag, EXTENSION.attribute)[EXTENSION.position].text)
+                            extensions.append(row.find_all(EXTENSION.tag, EXTENSION.attribute)[EXTENSION.position].text
+                                              .replace('\n', '').strip())
                         else:
-                            extensions.append(row.find(EXTENSION.tag, EXTENSION.attribute).text)
+                            extensions.append(row.find(EXTENSION.tag, EXTENSION.attribute).text
+                                              .replace('\n', '').strip())
                     except (TypeError, AttributeError):
                         extensions.append('NotFound')
 
@@ -270,8 +284,11 @@ class Pbooks:
             pprint(self.result)
 
 
-# if __name__ == '__main__':
-#     pbook = Pbooks(file_name='sources.json', author='jerome',
-#                    title='elements of statistic',
-#                    weights=(1, 1))
-#     pbook.main()
+if __name__ == '__main__':
+    pbook = Pbooks(file_name='sources.json', author='jerome',
+                   title='elements of statistic',
+                   weights=(1, 1),
+                   threshold=0.4,
+                   show_result=True,
+                   log=True)
+    pbook.main()
