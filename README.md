@@ -1,5 +1,7 @@
 ### Install
+```
 $ pip install pybooks
+```
 
 ## Usage
 
