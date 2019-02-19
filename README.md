@@ -5,8 +5,7 @@ $ pip install pybooks
 
 from pybooks.main import Pbooks \
 
-pbook = Pbooks(file_name='sources.json', \
-                author='jerome',\
+pbook = Pbooks( author='jerome',\
                 title='elements of statistic',\
                 weights=(9, 1)) 
 
