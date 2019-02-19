@@ -3,14 +3,15 @@ from distutils.core import setup
 setup(
     name='pybooks',
     packages=['pybooks'],
-    version='0.1',
+    version='0.3',
     license='MIT',
     description='Find a book download URL from multiple online book sources',
     author='Anh Van Giang',
     author_email='vangianganh@gmail.com',
     url='https://github.com/AnhVanGiang/pybooks',
-    download_url='https://github.com/AnhVanGiang/pybooks/archive/v_01.tar.gz',
+    download_url='https://github.com/AnhVanGiang/pybooks/archive/v_04.tar.gz',
     keywords=['scraper', 'books', 'python'],
+    include_package_data=True,
     install_requires=[
         'requests',
         'bs4',
