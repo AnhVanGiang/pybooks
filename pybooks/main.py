@@ -7,11 +7,14 @@ import json
 from pybooks.errors import *
 import logging
 from math import e
+import os
+
+SOURCES_FILE = os.path.dirname(__file__) + '/pybooks/source.json'
 
 
 class Pbooks:
-    def __init__(self, file_name: str,
-                 author: str, title: str,
+    def __init__(self, author: str, title: str,
+                 file_name: str = SOURCES_FILE,
                  weights: Tuple[float, float] = (1, 1)):
         logging.basicConfig(level=logging.INFO)
         self.sources = self.convert_to_struct(file_name)
