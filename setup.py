@@ -1,17 +1,18 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='pybooks',
     packages=['pybooks'],
-    version='0.3',
+    version='0.4',
     license='MIT',
     description='Find a book download URL from multiple online book sources',
     author='Anh Van Giang',
     author_email='vangianganh@gmail.com',
     url='https://github.com/AnhVanGiang/pybooks',
     download_url='https://github.com/AnhVanGiang/pybooks/archive/v_04.tar.gz',
-    keywords=['scraper', 'books', 'python'],
+    package_data = {'pybooks': ['sources.json']},
     include_package_data=True,
+    keywords=['scraper', 'books', 'python'],
     install_requires=[
         'requests',
         'bs4',
