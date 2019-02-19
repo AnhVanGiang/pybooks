@@ -1,0 +1,124 @@
+[
+  {
+    "URL": "http://gen.lib.rus.ec/",
+    "URL_RULES": {
+      "REQUEST": "?req=",
+      "DELIMITER": "+",
+      "CONCAT": "&",
+      "PAGINATION": "page="
+    },
+    "HTML_RULES": {
+      "ROW": {
+        "TAG": "tr",
+        "ATTRIBUTE":
+          {"valign": "top"}
+        ,
+        "POSITION": 1
+      },
+      "BODY": {
+        "TAG": "table",
+        "ATTRIBUTE":
+        {
+          "width": "100%",
+          "cellspacing": "1",
+          "cellpadding": "1",
+          "rules": "rows"
+        },
+        "POSITION": -1
+      },
+      "TITLE": {
+        "TAG": "td",
+        "ATTRIBUTE":
+        {
+          "width": "500"
+        }
+        ,
+        "POSITION": 0
+      },
+      "AUTHOR": {
+        "TAG": "td",
+        "ATTRIBUTE":
+          null
+        ,
+        "POSITION": 1
+      },
+      "YEAR": {
+        "TAG": "td",
+        "ATTRIBUTE":
+          {
+            "nowrap": true
+          },
+        "POSITION": 0
+      },
+      "EXTENSION": {
+        "TAG": "td",
+        "ATTRIBUTE":
+          {
+            "nowrap": true
+          },
+        "POSITION": 2
+      }
+    }
+  },
+  {
+    "URL": "https://b-ok.cc/",
+    "URL_RULES": {
+      "REQUEST": "s/?q=",
+      "DELIMITER": "+",
+      "CONCAT": "&",
+      "PAGINATION": "page="
+    },
+    "HTML_RULES": {
+      "ROW": {
+        "TAG": "div",
+        "ATTRIBUTE":
+          {"class": "resItemBox resItemBoxBooks exactMatch",
+          "itemtype": "http://schema.org/Book"}
+        ,
+        "POSITION": 0
+      },
+      "BODY": {
+        "TAG": "div",
+        "ATTRIBUTE":
+        {
+          "id": "searchResultBox"
+        },
+        "POSITION": null
+      },
+      "TITLE": {
+        "TAG": "h3",
+        "ATTRIBUTE":
+        {
+          "itemprop": "name"
+        }
+        ,
+        "POSITION": null
+      },
+      "AUTHOR": {
+        "TAG": "div",
+        "ATTRIBUTE":
+        {
+          "class": "authors"
+        }
+        ,
+        "POSITION": null
+      },
+      "YEAR": {
+        "TAG": "div",
+        "ATTRIBUTE":
+          {
+            "class": "bookProperty property_year"
+          },
+        "POSITION": null
+      },
+      "EXTENSION": {
+        "TAG": "div",
+        "ATTRIBUTE":
+          {
+            "class": "bookProperty property__file"
+          },
+        "POSITION": null
+      }
+    }
+  }
+]
