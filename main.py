@@ -250,10 +250,3 @@ class Pbooks:
     def main(self):
         self.parse()
         logging.info("Chosen URL is: {}".format(self.chosen))
-
-
-if __name__ == '__main__':
-    pbook = Pbooks(file_name='sources.json', author='jerome',
-                   title='elements of statistic',
-                   weights=(1, 1))
-    pbook.main()
