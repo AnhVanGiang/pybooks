@@ -5,7 +5,8 @@ $ pip install pybooks
 
 Simple usage
 
-```from pybooks.main import Pbooks \
+```
+from pybooks.main import Pbooks \
 
 pbook = Pbooks( author='jerome',\
                    title='elements of statistic',\
