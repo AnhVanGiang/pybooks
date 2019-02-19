@@ -20,3 +20,7 @@ The ```weights``` argument is used to calculate the accuracy of all the items fo
 Optional arguments are ```show_result: Print the result at the end or not```, ```threshold: Only print result with accuracy higher than threshold``` and ```log: Show process while running or not```
 
 ### You can modify or add additional sources by editing the file pybooks/sources.json and follow the existing format within the file.
+
+### LICENSE
+
+MIT
