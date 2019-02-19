@@ -8,6 +8,7 @@ from pybooks.errors import *
 import logging
 from math import e
 import os
+from pprint import pprint
 
 SOURCES_FILE = os.path.dirname(__file__) + '\\sources.json'
 
@@ -15,7 +16,18 @@ SOURCES_FILE = os.path.dirname(__file__) + '\\sources.json'
 class Pbooks:
     def __init__(self, author: str, title: str,
                  file_name: str = SOURCES_FILE,
-                 weights: Tuple[float, float] = (1, 1)):
+                 weights: Tuple[float, float] = (1, 1),
+                 show_result: bool = False,
+                 threshold: float = 0):
+        """
+        Search through all available sources and find a book with the highest accuracy based on author and title input
+        :param author: string Author of the book you want to find
+        :param title: string Title of the book you want to find
+        :param file_name: string JSON file contains all the sources and rules
+        :param weights: Tuple[float, float] contain the weight values for accuracy calculation
+        :param show_result: bool Print the result at the end or not
+        :param threshold: float Only show the result above the threshold
+        """
         logging.basicConfig(level=logging.INFO)
         self.sources = self.convert_to_struct(file_name)
         self.author = author
@@ -23,6 +35,8 @@ class Pbooks:
         self.result = []
         self.chosen = ''
         self.weights = weights
+        self.show_result = show_result
+        self.threshold = threshold
 
     def parse(self) -> None:
         max_acc = 0
@@ -86,14 +100,15 @@ class Pbooks:
 
                 for a, t, u, y, e in zip(authors, titles, urls, years, extensions):
                     accuracy = self.get_accuracy(self.author, a, self.title, t)
-                    self.result.append({
-                        'author': a,
-                        'title': t,
-                        'url': u,
-                        'year': y,
-                        'extension': e,
-                        'accuracy': accuracy
-                    })
+                    if accuracy >= self.threshold:
+                        self.result.append({
+                            'author': a,
+                            'title': t,
+                            'url': u,
+                            'year': y,
+                            'extension': e,
+                            'accuracy': accuracy
+                        })
                     count += 1
                     if accuracy > max_acc:
                         max_acc = accuracy
@@ -251,6 +266,8 @@ class Pbooks:
     def main(self):
         self.parse()
         logging.info("Chosen URL is: {}".format(self.chosen))
+        if self.show_result:
+            pprint(self.result)
 
 
 # if __name__ == '__main__':
