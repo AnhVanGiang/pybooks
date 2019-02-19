@@ -9,7 +9,7 @@ import logging
 from math import e
 import os
 
-SOURCES_FILE = os.path.dirname(__file__) + '\\pybooks\\source.json'
+SOURCES_FILE = os.path.dirname(__file__) + '\\source.json'
 
 
 class Pbooks:
