@@ -9,7 +9,7 @@ setup(
     author='Anh Van Giang',
     author_email='vangianganh@gmail.com',
     url='https://github.com/AnhVanGiang/pybooks',
-    download_url='https://github.com/user/reponame/archive/v_01.tar.gz',
+    download_url='https://github.com/AnhVanGiang/pybooks/archive/v_01.tar.gz',
     keywords=['scraper', 'books', 'python'],
     install_requires=[
         'requests',
