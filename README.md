@@ -6,10 +6,10 @@ $ pip install pybooks
 Simple usage
 
 ```
-from pybooks.main import Pbooks \
+from pybooks.main import Pbooks 
 
-pbook = Pbooks( author='jerome',\
-                   title='elements of statistic',\
+pbook = Pbooks( author='jerome',
+                   title='elements of statistic',
                    weights=(9, 1)) 
          
 
