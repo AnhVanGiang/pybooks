@@ -11,4 +11,4 @@ pbook = Pbooks( author='jerome',\
 
 pbook.main()
 
-### You can modify or add additional sources by editing the file pybooks/sources.json and follow the current format within the file.
+### You can modify or add additional sources by editing the file pybooks/sources.json and follow the existing format within the file.
