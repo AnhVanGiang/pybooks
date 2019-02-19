@@ -10,3 +10,5 @@ pbook = Pbooks( author='jerome',\
                 weights=(9, 1)) 
 
 pbook.main()
+
+### You can modify or add additional sources by editing the file pybooks/sources.json and follow the current format within the file.
