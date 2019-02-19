@@ -1,2 +1,13 @@
-# pybooks
-A simple python module to find a specific book from an author from multiple book sources
+### Install
+$ pip install pybooks
+
+## Usage
+
+from pybooks.main import Pbooks \
+
+pbook = Pbooks(file_name='sources.json', \
+                author='jerome',\
+                title='elements of statistic',\
+                weights=(9, 1)) 
+
+pbook.main()
