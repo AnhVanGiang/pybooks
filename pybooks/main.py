@@ -10,6 +10,7 @@ from math import e
 import os
 from pprint import pprint
 from sdebugger import Decorators
+import time
 
 SOURCES_FILE = os.path.dirname(__file__) + '\\sources.json'
 
@@ -21,7 +22,9 @@ class Pbooks:
                  weights: Tuple[float or int, float or int] = (1, 1),
                  show_result: bool = False,
                  threshold: float = 0,
-                 log: bool = True):
+                 log: bool = True,
+                 break_at: float = 0.9,
+                 delay: float = 0.8):
         """
         Search through all available sources and find a book with the highest accuracy based on author and title input
         :param author: string Author of the book you want to find
@@ -31,9 +34,12 @@ class Pbooks:
         :param show_result: bool Print the result at the end or not
         :param threshold: float Only show the result above the threshold
         :param log: bool Print during run or not
+        :param break_at: float Stop if encounter a title with accuracy higher or equal than this number
+        :param delay: Time gap between printing each books and their attributes
         """
         assert type(weights[0]) in (float, int) and type(weights[1]) in (float, int), \
             "Weights should be of type int or float"
+        assert break_at > 0, 'break_at should be higher than 0'
         if log:
             logging.basicConfig(level=logging.INFO)
         else:
@@ -50,6 +56,9 @@ class Pbooks:
         self.weights = weights
         self.show_result = show_result
         self.threshold = threshold
+        self.break_at = break_at
+        self.log = log
+        self.delay = delay
 
     def parse(self) -> None:
         max_acc = 0
@@ -57,7 +66,8 @@ class Pbooks:
         count = 0
         for source in self.sources:
             logging.info(msg='Scraping URL: {}'.format(source.url))
-            for page in self.get_pagination(source, self.title):
+            all_pages = self.get_pagination(source, self.title)
+            for page in all_pages:
                 logging.info(msg='Searching through page: {}'.format(page))
                 html = BeautifulSoup(requests.get(page).content, 'lxml')
                 hrules = source.html_rules
@@ -69,74 +79,93 @@ class Pbooks:
                 AUTHOR = hrules.author
                 body = html.find(BODY.tag, BODY.attribute)
                 rows = body.find_all(ROW.tag, ROW.attribute)[ROW.position:]
-                authors, titles, urls, years, extensions = [], [], [], [], []
                 # TODO: Find a shorter, more efficient method for the try-except
                 for row in rows:
                     try:
                         if AUTHOR.position is not None:
-                            authors.append(row.find_all(AUTHOR.tag, AUTHOR.attribute)[AUTHOR.position].text
-                                           .replace('\n', '').strip())
+                            author = row.find_all(AUTHOR.tag, AUTHOR.attribute)[AUTHOR.position].text \
+                                .replace('\n', '').strip()
                         else:
-                            authors.append(row.find(AUTHOR.tag, AUTHOR.attribute).text.replace('\n', '').strip())
+                            author = row.find(AUTHOR.tag, AUTHOR.attribute).text.replace('\n', '').strip()
                     except (TypeError, AttributeError):
-                        authors.append('NotFound')
+                        author = "NotFound"
 
                     try:
                         if TITLE.position is not None:
-                            titles.append(row.find_all(TITLE.tag, TITLE.attribute)[TITLE.position].text
-                                          .replace('\n', '').strip())
-                            urls.append(source.url +
-                                        row.find_all(TITLE.tag, TITLE.attribute)[TITLE.position]
-                                        .find('a')['href'].replace('\n', '').strip())
+                            title = row.find_all(TITLE.tag, TITLE.attribute)[TITLE.position].text \
+                                .replace('\n', '').strip()
+                            url = source.url + row.find_all(TITLE.tag, TITLE.attribute)[TITLE.position] \
+                                .find('a')['href'].replace('\n', '').strip()
                         else:
-                            titles.append(row.find(TITLE.tag, TITLE.attribute).text.replace('\n', '').strip())
-                            urls.append(source.url +
-                                        row.find(TITLE.tag, TITLE.attribute)
-                                        .find('a')['href'].replace('\n', '').strip())
+                            title = row.find(TITLE.tag, TITLE.attribute).text.replace('\n', '').strip()
+                            url = source.url + row.find(TITLE.tag, TITLE.attribute).find('a')['href']\
+                                .replace('\n', '').strip()
                     except (TypeError, AttributeError):
-                        titles.append('NotFound')
-                        urls.append('NotFound')
+                        title = "NotFound"
+                        url = "NotFound"
 
                     try:
                         if YEAR.position is not None:
-                            years.append(row.find_all(YEAR.tag, YEAR.attribute)[YEAR.position].text
-                                         .replace('\n', '').strip())
+                            year = row.find_all(YEAR.tag, YEAR.attribute)[YEAR.position].text \
+                                         .replace('\n', '').strip()
                         else:
-                            years.append(row.find(YEAR.tag, YEAR.attribute).text.replace('\n', '').strip())
+                            year = row.find(YEAR.tag, YEAR.attribute).text.replace('\n', '').strip()
                     except (TypeError, AttributeError):
-                        years.append('NotFound')
+                        year = "NotFound"
 
                     try:
                         if EXTENSION.position is not None:
-                            extensions.append(row.find_all(EXTENSION.tag, EXTENSION.attribute)[EXTENSION.position].text
-                                              .replace('\n', '').strip())
+                            extension = row.find_all(EXTENSION.tag, EXTENSION.attribute)[EXTENSION.position].text \
+                                              .replace('\n', '').strip()
                         else:
-                            extensions.append(row.find(EXTENSION.tag, EXTENSION.attribute).text
-                                              .replace('\n', '').strip())
+                            extension = row.find(EXTENSION.tag, EXTENSION.attribute).text \
+                                              .replace('\n', '').strip()
                     except (TypeError, AttributeError):
-                        extensions.append('NotFound')
+                        extension = "NotFound"
 
-                for a, t, u, y, e in zip(authors, titles, urls, years, extensions):
-                    accuracy = self.get_accuracy(self.author, a, self.title, t)
-                    if accuracy >= self.threshold:
+                    accuracy = self.get_accuracy(self.author, author, self.title, title)
+
+                    if accuracy[0] >= self.threshold:
                         self.result.append({
-                            'author': a,
-                            'title': t,
-                            'url': u,
-                            'year': y,
-                            'extension': e,
+                            'author': author,
+                            'title': title,
+                            'url': url,
+                            'year': year,
+                            'extension': extension,
                             'accuracy': accuracy
                         })
-                    count += 1
-                    if accuracy > max_acc:
-                        max_acc = accuracy
-                        max_title = t
-                        self.chosen = u
-                logging.info('Number of books found so far: {}'.format(count))
-                logging.info('Highest accuracy so far: {} with title \n {}'.format(max_acc,
-                                                                                   max_title))
 
-    def get_pagination(self, source: Source, request: str) -> str:
+                    count += 1
+
+                    if accuracy[0] > max_acc:
+                        max_acc = accuracy[0]
+                        max_title = title
+                        self.chosen = url
+
+                    logging.info('Number of books found so far: {}'.format(count))
+                    logging.info("Found book with \n"
+                                 "Title: {} \n"
+                                 "Title accuracy: {}, Author accuracy: {} \n"
+                                 "Overall accuracy: {} \n".format(title,
+                                                                  accuracy[1],
+                                                                  accuracy[2],
+                                                                  accuracy[0]))
+                    logging.info('Highest accuracy so far: {}. \n'
+                                 'Title: {} \n'.format(max_acc,
+                                                       max_title))
+
+                    if max_acc >= self.break_at:
+                        logging.info("Book with accuracy higher than or equal to breaking condition is: \n"
+                                     "Title: {} \n"
+                                     "Author: {} \n"
+                                     "Overall accuracy: {}".format(title,
+                                                                   author,
+                                                                   accuracy[0]))
+                        break
+                    if self.log:
+                        time.sleep(self.delay)
+
+    def get_pagination(self, source: Source, request: str) -> List[str]:
         """
         Get URL for each page number in a source
         :param source: Source
@@ -144,6 +173,8 @@ class Pbooks:
         :return: str
         """
         page = 1
+
+        results = []
 
         def get_page(url, req, conc, pagination_r, pag):
             return "{main_url}{request_str}{concat}{pagi}".format(
@@ -169,11 +200,11 @@ class Pbooks:
 
             if self.check_duplicate(next_url, page_url):
                 logging.info('Reached all pages of source: {}'.format(source.url))
-                yield next_url
+                results.append(next_url)
                 break
             else:
-                page += 1
-                yield page_url
+                results.append(page_url)
+            return results
 
     def check_duplicate(self, url1: str, url2: str) -> bool:
         """
@@ -187,7 +218,7 @@ class Pbooks:
         body1, body2 = self.get_source(url1).html_rules.body, self.get_source(url2).html_rules.body
         return html1.find(body1.tag, body1.attribute) == html2.find(body2.tag, body2.attribute)
 
-    def get_accuracy(self, author1: str, author2: str, title1: str, title2: str) -> float:
+    def get_accuracy(self, author1: str, author2: str, title1: str, title2: str) -> Tuple[float, float, float]:
         # TODO: New algorithm for matching authors
         """
         Get the sigmoided weighted sum of accuracy of the actual authors and titles found and the target items
@@ -195,7 +226,7 @@ class Pbooks:
         :param author2: actual author
         :param title1: target title
         :param title2: actual title
-        :return: float average accuracy
+        :return: Tuple[float: overall accuracy, float: author accuracy, float: title accuracy]
         """
         # Split a string with multiple authors separated by ","
         author1 = author1.lower().split(',')
@@ -208,8 +239,9 @@ class Pbooks:
                               for a1 in author1 for a2 in author2])
             acc = (author_acc * self.weights[0] + title_acc * self.weights[1])
         else:
-            acc = title_acc 
-        return 1 / (1 + e**(-acc))
+            author_acc = 0
+            acc = title_acc
+        return 1 / (1 + e ** (-acc)), author_acc, title_acc
 
     # def func_wrap(self, func: Callable) -> Callable:
     #     """
@@ -299,10 +331,11 @@ class Pbooks:
 
 
 if __name__ == '__main__':
-    pbook = Pbooks(author='james kouzes, barry posner',
-                   title='the leadership challenge',
-                   weights=(1, 5),
+    pbook = Pbooks(author='barry posner',
+                   title='the leadership',
+                   weights=(1, 1),
                    threshold=0.4,
                    show_result=False,
-                   log=True)
+                   log=True,
+                   break_at=0.8)
     pbook.main()
