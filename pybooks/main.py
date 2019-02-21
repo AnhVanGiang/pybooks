@@ -9,14 +9,16 @@ import logging
 from math import e
 import os
 from pprint import pprint
+from sdebugger import Decorators
 
 SOURCES_FILE = os.path.dirname(__file__) + '\\sources.json'
 
 
+@Decorators.typecheck
 class Pbooks:
-    def __init__(self, author: str, title: str,
+    def __init__(self, author: str or None, title: str,
                  file_name: str = SOURCES_FILE,
-                 weights: Tuple[float, float] = (1, 1),
+                 weights: Tuple[float or int, float or int] = (1, 1),
                  show_result: bool = False,
                  threshold: float = 0,
                  log: bool = True):
@@ -30,6 +32,8 @@ class Pbooks:
         :param threshold: float Only show the result above the threshold
         :param log: bool Print during run or not
         """
+        assert type(weights[0]) in (float, int) and type(weights[1]) in (float, int), \
+            "Weights should be of type int or float"
         if log:
             logging.basicConfig(level=logging.INFO)
         else:
@@ -129,8 +133,8 @@ class Pbooks:
                         max_title = t
                         self.chosen = u
                 logging.info('Number of books found so far: {}'.format(count))
-                logging.info('Highest accuracy so far: {} with title {}'.format(max_acc,
-                                                                                max_title))
+                logging.info('Highest accuracy so far: {} with title \n {}'.format(max_acc,
+                                                                                   max_title))
 
     def get_pagination(self, source: Source, request: str) -> str:
         """
@@ -156,16 +160,16 @@ class Pbooks:
                                 source.url_rules.concat,
                                 source.url_rules.pagination,
                                 str(page))
-            previous = page + 1
-            previous_url = get_page(source.url,
-                                    source.url_rules.request + request_str,
-                                    source.url_rules.concat,
-                                    source.url_rules.pagination,
-                                    str(previous))
+            next_ = page + 1
+            next_url = get_page(source.url,
+                                source.url_rules.request + request_str,
+                                source.url_rules.concat,
+                                source.url_rules.pagination,
+                                str(next_))
 
-            if self.check_duplicate(previous_url, page_url):
+            if self.check_duplicate(next_url, page_url):
                 logging.info('Reached all pages of source: {}'.format(source.url))
-                yield previous_url
+                yield next_url
                 break
             else:
                 page += 1
@@ -178,23 +182,33 @@ class Pbooks:
         :param url2: string URL of the second page
         :return: bool Two pages are the same or not
         """
-        html1 = BeautifulSoup(requests.get(url1).content, 'lxml')
-        html2 = BeautifulSoup(requests.get(url2).content, 'lxml')
+        html1 = BeautifulSoup(requests.get(url1, timeout=30).content, 'lxml')
+        html2 = BeautifulSoup(requests.get(url2, timeout=30).content, 'lxml')
         body1, body2 = self.get_source(url1).html_rules.body, self.get_source(url2).html_rules.body
         return html1.find(body1.tag, body1.attribute) == html2.find(body2.tag, body2.attribute)
 
     def get_accuracy(self, author1: str, author2: str, title1: str, title2: str) -> float:
+        # TODO: New algorithm for matching authors
         """
         Get the sigmoided weighted sum of accuracy of the actual authors and titles found and the target items
-        :param author1: string actual or target author
-        :param author2: string actual or target author
-        :param title1: string actual or target title
-        :param title2: string actual or target title
+        :param author1: target author
+        :param author2: actual author
+        :param title1: target title
+        :param title2: actual title
         :return: float average accuracy
         """
-        author_acc = SequenceMatcher(None, author1, author2).ratio()
+        # Split a string with multiple authors separated by ","
+        author1 = author1.lower().split(',')
+        author2 = author2.lower().split(',')
+        title1 = title1.lower()
+        title2 = title2.lower()
         title_acc = SequenceMatcher(None, title1, title2).ratio()
-        acc = (author_acc*self.weights[0] + title_acc*self.weights[1])
+        if author1[0].strip() != '':
+            author_acc = max([SequenceMatcher(None, a1.lstrip().rstrip(), a2.lstrip().rstrip()).ratio()
+                              for a1 in author1 for a2 in author2])
+            acc = (author_acc * self.weights[0] + title_acc * self.weights[1])
+        else:
+            acc = title_acc 
         return 1 / (1 + e**(-acc))
 
     # def func_wrap(self, func: Callable) -> Callable:
@@ -284,11 +298,11 @@ class Pbooks:
             pprint(self.result)
 
 
-# if __name__ == '__main__':
-#     pbook = Pbooks(file_name='sources.json', author='jerome',
-#                    title='elements of statistic',
-#                    weights=(1, 1),
-#                    threshold=0.4,
-#                    show_result=True,
-#                    log=True)
-#     pbook.main()
+if __name__ == '__main__':
+    pbook = Pbooks(author='james kouzes, barry posner',
+                   title='the leadership challenge',
+                   weights=(1, 5),
+                   threshold=0.4,
+                   show_result=False,
+                   log=True)
+    pbook.main()
