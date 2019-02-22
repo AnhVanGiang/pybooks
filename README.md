@@ -26,7 +26,8 @@ Optional arguments are ```show_result: Print the result at the end or not```, ``
 
 ### Sources.json format, rules
 
-Example: [Library Genesis with elements of statistics as search term]: <http://gen.lib.rus.ec/search.php?&req=elements+of+statistics&phrase=1&view=simple&column=def&sort=def&sortmode=ASC&page=1>
+Example: 
+Library Genesis with elements of statistics as search term: <http://gen.lib.rus.ec/search.php?&req=elements+of+statistics&phrase=1&view=simple&column=def&sort=def&sortmode=ASC&page=1>
 
 The only components we need in the URL are: ```request: ?req=...```, ```delimiter: + (elements+of+statistics)``` and ```pagination: 
 page=...``` and ```term_concatenation: & (req=...&page=...)```
