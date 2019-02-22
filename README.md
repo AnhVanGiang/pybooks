@@ -42,6 +42,31 @@ HTML_RULES: Contains nested dictionary represent necessary components to conduct
 .TAG: The tag of the desired element
 .ATTRIBUTE: Attributes of the tag, for exanple: {"class": "id", "...": "..", ...}. Leave the value of a key as true if an attribute has no value
 ```
+### COMMAND LINE USAGE
+You can use the package directly from the command line
+Example: Searching a book with title: "Elements of statistical learning" and author: "Jerome Friedman"
+```sh
+pbook -a "jerome friedman" -t "elements of statistical learning"
+```
+OPTIONAL ARGUMENTS ARE:
+```sh
+  -h, --help            show this help message and exit
+  -a AUTHOR, --author AUTHOR
+                        Author of the book you want to find
+  -t TITLE, --title TITLE
+                        Title of the book you want to find
+  -w WEIGHTS, --weights WEIGHTS
+                        Assign author and title weight to the final accuracy
+                        calculation
+  -th THRESHOLD, --threshold THRESHOLD
+                        Only get results above the threshold amount
+  -l LOG, --log LOG     Print out the process
+  -s SHOW, --show SHOW  Show result at the end of running
+  -br BREAKAT, --breakat BREAKAT
+                        Stop when encountered a book with accuracy higher than
+                        or equal to this number
+```
+
 ### LICENSE
 
 MIT
