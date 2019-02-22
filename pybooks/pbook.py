@@ -7,17 +7,17 @@ import json
 from errors import *
 import logging
 from math import e
-import os
 from pprint import pprint
 from sdebugger import Decorators
 import time
 import argparse
 
-SOURCES_FILE = os.path.dirname(__file__) + '\\sources.json'
+SOURCES_FILE = "sources.json"
 
 
 @Decorators.typecheck
 class Pbooks:
+    # TODO: Add different type of scraping: Lazy and Thorough
     def __init__(self, author: str or None, title: str,
                  file_name: str = SOURCES_FILE,
                  weights: Tuple[float or int, float or int] = (1, 1),
@@ -67,8 +67,7 @@ class Pbooks:
         count = 0
         for source in self.sources:
             logging.info(msg='Scraping URL: {}'.format(source.url))
-            all_pages = self.get_pagination(source, self.title)
-            for page in all_pages:
+            for page in self.get_pagination(source, self.title):
                 logging.info(msg='Searching through page: {}'.format(page))
                 html = BeautifulSoup(requests.get(page).content, 'lxml')
                 hrules = source.html_rules
@@ -162,11 +161,11 @@ class Pbooks:
                                      "Overall accuracy: {}".format(title,
                                                                    author,
                                                                    accuracy[0]))
-                        break
+                        return
                     if self.log:
                         time.sleep(self.delay)
 
-    def get_pagination(self, source: Source, request: str) -> List[str]:
+    def get_pagination(self, source: Source, request: str) -> str:
         """
         Get URL for each page number in a source
         :param source: Source
@@ -174,8 +173,6 @@ class Pbooks:
         :return: str
         """
         page = 1
-
-        results = []
 
         def get_page(url, req, conc, pagination_r, pag):
             return "{main_url}{request_str}{concat}{pagi}".format(
@@ -201,11 +198,11 @@ class Pbooks:
 
             if self.check_duplicate(next_url, page_url):
                 logging.info('Reached all pages of source: {}'.format(source.url))
-                results.append(next_url)
+                yield next_url
                 break
             else:
-                results.append(page_url)
-            return results
+                yield page_url
+                page += 1
 
     def check_duplicate(self, url1: str, url2: str) -> bool:
         """
@@ -332,15 +329,54 @@ class Pbooks:
 
 
 if __name__ == '__main__':
+    def weights(cmd):
+        try:
+            x, y = map(float, cmd.split(','))
+            return x, y
+        except (TypeError, AttributeError):
+            raise argparse.ArgumentTypeError("Weights must be x: float or int, y: float or int")
     parser = argparse.ArgumentParser()
-    parser.add_argument("author", help="Author of the book you want to find")
+    parser.add_argument("-a",
+                        "--author",
+                        help="Author of the book you want to find",
+                        type=str,
+                        required=True)
+    parser.add_argument("-t",
+                        "--title",
+                        help="Title of the book you want to find",
+                        type=str,
+                        required=True)
+    parser.add_argument("-w",
+                        "--weights",
+                        help="Assign author and title weight to the final accuracy calculation",
+                        default=(1, 1),
+                        type=weights)
+    parser.add_argument("-th",
+                        "--threshold",
+                        help="Only get results above the threshold amount",
+                        type=float,
+                        default=0.5)
+    parser.add_argument("-l",
+                        "--log",
+                        help="Print out the process",
+                        default=True,
+                        type=bool)
+    parser.add_argument("-s",
+                        "--show",
+                        help="Show result at the end of running")
+    parser.add_argument("-br",
+                        "--breakat",
+                        help="Stop when encountered a book with accuracy higher than or equal to this number",
+                        type=float,
+                        default=0.8)
     args = parser.parse_args()
-    print(args)
-    # pbook = Pbooks(author='barry posner',
-    #                title='the leadership',
-    #                weights=(1, 1),
-    #                threshold=0.4,
-    #                show_result=False,
-    #                log=True,
-    #                break_at=0.8)
-    # pbook.main()
+    log = args.log
+    show = args.show
+    pbook = Pbooks(author=args.author,
+                   title=args.title,
+                   weights=args.weights,
+                   threshold=args.threshold,
+                   show_result=show,
+                   log=log,
+                   break_at=args.breakat)
+    pbook.main()
