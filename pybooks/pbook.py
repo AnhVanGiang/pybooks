@@ -333,7 +333,7 @@ class Pbooks:
 
     def main(self):
         self.parse()
-        logging.info("\n "
+        logging.info("\n"
                      "Chosen URL is: {} \n"
                      "Title: {} \n"
                      "Accuracy: {}".format(self.chosen_url,
