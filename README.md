@@ -48,8 +48,9 @@ Example: Searching a book with title: "Elements of statistical learning" and aut
 ```sh
 pbook -a "jerome friedman" -t "elements of statistical learning"
 ```
-OPTIONAL ARGUMENTS ARE:
 ```sh
+OPTIONAL ARGUMENTS
+
   -h, --help            show this help message and exit
   -a AUTHOR, --author AUTHOR
                         Author of the book you want to find
