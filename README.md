@@ -45,13 +45,17 @@ HTML_RULES: Contains nested dictionary represent necessary components to conduct
 ### COMMAND LINE USAGE
 You can use the package directly from the command line
 Example: Searching a book with title: "Elements of statistical learning" and author: "Jerome Friedman"
+You can add pbook.exe to environment variables and use it from the command line by this command with ```%PATH%``` as your path to pybooks directory (folder), usually found in ```\Python{version}\Lib\pybooks```.
+```sh
+setx PATH "%PATH%
+```
+
 ```sh
 pbook -a "jerome friedman" -t "elements of statistical learning"
 ```
 ```sh
 OPTIONAL ARGUMENTS
-
-  -h, --help            show this help message and exit
+-h, --help            show this help message and exit
   -a AUTHOR, --author AUTHOR
                         Author of the book you want to find
   -t TITLE, --title TITLE
@@ -63,9 +67,12 @@ OPTIONAL ARGUMENTS
                         Only get results above the threshold amount
   -l LOG, --log LOG     Print out the process
   -s SHOW, --show SHOW  Show result at the end of running
-  -br BREAKAT, --breakat BREAKAT
-                        Stop when encountered a book with accuracy higher than
+  -br BREAK_AT, --break-at BREAK_AT
+                        Stop when encounter a book with accuracy higher than
                         or equal to this number
+  -m METHOD, --method METHOD
+                        Choose a book evaluation method
+
 ```
 
 ### LICENSE
