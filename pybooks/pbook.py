@@ -25,7 +25,8 @@ class Pbooks:
                  threshold: float = 0,
                  log: bool = True,
                  break_at: float = 0.9,
-                 delay: float = 0.8):
+                 delay: float = 0.8,
+                 method: str = "lazy"):
         """
         Search through all available sources and find a book with the highest accuracy based on author and title input
         :param author: string Author of the book you want to find
@@ -37,7 +38,11 @@ class Pbooks:
         :param log: bool Print during run or not
         :param break_at: float Stop if encounter a title with accuracy higher or equal than this number
         :param delay: Time gap between printing each books and their attributes
+        :param method: Decide which method to evaluate books.
+        Lazy: as soon as a book with accuracy higher than break_at is found, stop and return immediately
+        Thorough: Find all books available and return the one with highest accuracy
         """
+        assert method in ("lazy", "thorough"), "Method should be 'lazy' or 'thorough'"
         assert type(weights[0]) in (float, int) and type(weights[1]) in (float, int), \
             "Weights should be of type int or float"
         assert break_at > 0, 'break_at should be higher than 0'
@@ -53,17 +58,18 @@ class Pbooks:
         self.author = author
         self.title = title
         self.result = []
-        self.chosen = ''
+        self.chosen_url = ''
         self.weights = weights
         self.show_result = show_result
         self.threshold = threshold
         self.break_at = break_at
         self.log = log
         self.delay = delay
+        self.method = method
+        self.chosen_title = ''
+        self.highest_acc = 0
 
     def parse(self) -> None:
-        max_acc = 0
-        max_title = ''
         count = 0
         for source in self.sources:
             logging.info(msg='Scraping URL: {}'.format(source.url))
@@ -79,6 +85,8 @@ class Pbooks:
                 AUTHOR = hrules.author
                 body = html.find(BODY.tag, BODY.attribute)
                 rows = body.find_all(ROW.tag, ROW.attribute)[ROW.position:]
+                if not rows:
+                    logging.info("Found no books or the tags and attributes are incorrect")
                 # TODO: Find a shorter, more efficient method for the try-except
                 for row in rows:
                     try:
@@ -137,33 +145,35 @@ class Pbooks:
 
                     count += 1
 
-                    if accuracy[0] > max_acc:
-                        max_acc = accuracy[0]
-                        max_title = title
-                        self.chosen = url
+                    if accuracy[0] > self.highest_acc:
+                        self.highest_acc = accuracy[0]
+                        self.chosen_title = title
+                        self.chosen_url = url
 
                     logging.info('Number of books found so far: {}'.format(count))
-                    logging.info("Found book with \n"
-                                 "Title: {} \n"
-                                 "Title accuracy: {}, Author accuracy: {} \n"
-                                 "Overall accuracy: {} \n".format(title,
-                                                                  accuracy[1],
-                                                                  accuracy[2],
-                                                                  accuracy[0]))
-                    logging.info('Highest accuracy so far: {}. \n'
-                                 'Title: {} \n'.format(max_acc,
-                                                       max_title))
 
-                    if max_acc >= self.break_at:
-                        logging.info("Book with accuracy higher than or equal to breaking condition is: \n"
+                    if self.method == "lazy":
+                        logging.info("Found book with \n"
                                      "Title: {} \n"
-                                     "Author: {} \n"
-                                     "Overall accuracy: {}".format(title,
-                                                                   author,
-                                                                   accuracy[0]))
-                        return
-                    if self.log:
-                        time.sleep(self.delay)
+                                     "Title accuracy: {}, Author accuracy: {} \n"
+                                     "Overall accuracy: {} \n".format(title,
+                                                                      accuracy[1],
+                                                                      accuracy[2],
+                                                                      accuracy[0]))
+                        logging.info('Highest accuracy so far: {}. \n'
+                                     'Title: {} \n'.format(self.highest_acc,
+                                                           self.chosen_title))
+
+                        if self.highest_acc >= self.break_at:
+                            logging.info("Book with accuracy higher than or equal to breaking condition is: \n"
+                                         "Title: {} \n"
+                                         "Author: {} \n"
+                                         "Overall accuracy: {}".format(title,
+                                                                       author,
+                                                                       accuracy[0]))
+                            return
+                        if self.log:
+                            time.sleep(self.delay)
 
     def get_pagination(self, source: Source, request: str) -> str:
         """
@@ -217,7 +227,7 @@ class Pbooks:
         return html1.find(body1.tag, body1.attribute) == html2.find(body2.tag, body2.attribute)
 
     def get_accuracy(self, author1: str, author2: str, title1: str, title2: str) -> Tuple[float, float, float]:
-        # TODO: New algorithm for matching authors
+        # TODO: Find a better way to format actual title and author strings
         """
         Get the sigmoided weighted sum of accuracy of the actual authors and titles found and the target items
         :param author1: target author
@@ -323,7 +333,12 @@ class Pbooks:
 
     def main(self):
         self.parse()
-        logging.info("Chosen URL is: {}".format(self.chosen))
+        logging.info("\n "
+                     "Chosen URL is: {} \n"
+                     "Title: {} \n"
+                     "Accuracy: {}".format(self.chosen_url,
+                                           self.chosen_title,
+                                           self.highest_acc))
         if self.show_result:
             pprint(self.result)
 
@@ -365,18 +380,24 @@ if __name__ == '__main__':
                         "--show",
                         help="Show result at the end of running")
     parser.add_argument("-br",
-                        "--breakat",
-                        help="Stop when encountered a book with accuracy higher than or equal to this number",
+                        "--break-at",
+                        help="Choose a book evaluation method",
                         type=float,
-                        default=0.8)
+                        default=0.9)
+    parser.add_argument("-m",
+                        "--method",
+                        help="Choose a book evaluation method",
+                        type=str,
+                        default="lazy")
     args = parser.parse_args()
-    log = args.log
-    show = args.show
+    if args.method not in ("lazy", "thorough"):
+        raise argparse.ArgumentTypeError("METHOD argument should be either 'lazy' or 'thorough'")
     pbook = Pbooks(author=args.author,
                    title=args.title,
                    weights=args.weights,
                    threshold=args.threshold,
-                   show_result=show,
-                   log=log,
-                   break_at=args.breakat)
+                   show_result=args.show,
+                   log=args.log,
+                   break_at=args.break_at,
+                   method=args.method)
     pbook.main()
