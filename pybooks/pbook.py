@@ -11,6 +11,7 @@ from pprint import pprint
 from sdebugger import Decorators
 import time
 import argparse
+import re
 
 SOURCES_FILE = "sources.json"
 
@@ -227,7 +228,6 @@ class Pbooks:
         return html1.find(body1.tag, body1.attribute) == html2.find(body2.tag, body2.attribute)
 
     def get_accuracy(self, author1: str, author2: str, title1: str, title2: str) -> Tuple[float, float, float]:
-        # TODO: Find a better way to format actual title and author strings
         """
         Get the sigmoided weighted sum of accuracy of the actual authors and titles found and the target items
         :param author1: target author
@@ -237,10 +237,11 @@ class Pbooks:
         :return: Tuple[float: overall accuracy, float: author accuracy, float: title accuracy]
         """
         # Split a string with multiple authors separated by ","
+        ptrn = re.compile(r'([a-zA-Z]+\b(?!]))')
         author1 = author1.lower().split(',')
         author2 = author2.lower().split(',')
         title1 = title1.lower()
-        title2 = title2.lower()
+        title2 = ' '.join(ptrn.findall(title2.lower()))
         title_acc = SequenceMatcher(None, title1, title2).ratio()
         if author1[0].strip() != '':
             author_acc = max([SequenceMatcher(None, a1.lstrip().rstrip(), a2.lstrip().rstrip()).ratio()
@@ -381,7 +382,7 @@ if __name__ == '__main__':
                         help="Show result at the end of running")
     parser.add_argument("-br",
                         "--break-at",
-                        help="Choose a book evaluation method",
+                        help="Stop when encounter a book with accuracy higher than or equal to this number",
                         type=float,
                         default=0.9)
     parser.add_argument("-m",
